@@ -4,39 +4,66 @@ import {
   HealthIndicatorResult,
   HealthCheckError,
 } from '@nestjs/terminus';
-import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DatabaseHealthIndicator extends HealthIndicator {
-  constructor(@InjectConnection() private connection: Connection) {
+  constructor(
+    @InjectDataSource()
+    private dataSource: DataSource,
+  ) {
     super();
   }
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
-    const isHealthy = this.connection.readyState === 1; // 1 = connected
-    
-    const resultData = this.getStatus(key, isHealthy, {
-      connectionState: this.getConnectionStateString(this.connection.readyState),
-      databaseName: this.connection.name,
-      host: this.connection.host,
-      port: this.connection.port,
-    });
+    try {
+      await this.dataSource.query('SELECT 1');
+      
+      const options = this.dataSource.options;
+      const connectionInfo = this.extractConnectionInfo(options);
+      
+      const resultData = this.getStatus(key, true, {
+        connectionState: 'connected',
+        databaseName: options.database,
+        type: options.type,
+        ...connectionInfo, 
+      });
 
-    if (isHealthy) {
       return resultData;
+    } catch (error) {
+      const resultData = this.getStatus(key, false, {
+        connectionState: 'disconnected',
+        error: error.message,
+      });
+      
+      throw new HealthCheckError('Database is not connected', resultData);
     }
-    
-    throw new HealthCheckError('Database is not connected', resultData);
   }
 
-  private getConnectionStateString(state: number): string {
-    switch (state) {
-      case 0: return 'disconnected';
-      case 1: return 'connected';
-      case 2: return 'connecting';
-      case 3: return 'disconnecting';
-      default: return 'unknown';
+  private extractConnectionInfo(options: any): Record<string, any> {
+    const info: Record<string, any> = {};
+    
+    // Extract host if it exists (PostgreSQL, MySQL, etc.)
+    if (options.host !== undefined) {
+      info.host = options.host;
     }
+    
+    // Extract port if it exists
+    if (options.port !== undefined) {
+      info.port = options.port;
+    }
+    
+    // Extract username if it exists
+    if (options.username !== undefined) {
+      info.username = options.username;
+    }
+    
+    // For SQLite, extract path
+    if (options.type === 'sqlite' && options.database) {
+      info.path = options.database;
+    }
+    
+    return info;
   }
 }

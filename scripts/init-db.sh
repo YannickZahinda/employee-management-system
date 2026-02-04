@@ -1,31 +1,23 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Initializing PostgreSQL database..."
+echo "🚀 Starting database initialization..."
 
-until pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do
-  echo "⏳ Waiting for PostgreSQL to be ready..."
-  sleep 2
-done
+# Wait for PostgreSQL to start
+echo "⏳ Waiting for PostgreSQL to start..."
+sleep 5
 
+# Create extensions in the target database
+echo "🔧 Creating database extensions..."
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-    -- Enable UUID extension
+    -- Enable UUID generation
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
     
-    -- Create additional extensions if needed
+    -- Enable cryptographic functions
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
     
-    -- Set timezone
-    SET timezone = 'UTC';
-    
-    -- Create schema if needed
-    -- CREATE SCHEMA IF NOT EXISTS employee_schema;
-    
-    -- Set search path (optional)
-    -- ALTER DATABASE $POSTGRES_DB SET search_path TO employee_schema, public;
-    
-    -- You can add custom initialization here
-    -- CREATE TABLE IF NOT EXISTS example (...);
+    -- Output success message
+    SELECT '✅ Database initialized successfully!' as message;
 EOSQL
 
-echo "✅ Database initialization completed!"
+echo "🎉 Database initialization completed!"
