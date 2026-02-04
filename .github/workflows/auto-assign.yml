@@ -1,0 +1,61 @@
+name: Auto Assign Issues and PRs
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.payload.issue || context.payload.pull_request;
+            const author = issue.user.login;
+            
+            // Get team members
+            const teamMembers = ['yannick-zahinda', 'another-maintainer'];
+            
+            // Assign random team member
+            const randomMember = teamMembers[Math.floor(Math.random() * teamMembers.length)];
+            
+            // Add assignee
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              assignees: [randomMember]
+            });
+            
+            // Add labels based on content
+            const labels = [];
+            const title = issue.title.toLowerCase();
+            const body = (issue.body || '').toLowerCase();
+            
+            if (title.includes('bug') || body.includes('bug')) {
+              labels.push('bug');
+            }
+            if (title.includes('feat') || body.includes('feature')) {
+              labels.push('enhancement');
+            }
+            if (title.includes('doc') || body.includes('documentation')) {
+              labels.push('documentation');
+            }
+            if (title.includes('test') || body.includes('testing')) {
+              labels.push('testing');
+            }
+            if (title.includes('security')) {
+              labels.push('security');
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+            }

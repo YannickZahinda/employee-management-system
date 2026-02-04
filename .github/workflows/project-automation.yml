@@ -1,0 +1,47 @@
+name: Project Automation
+
+on:
+  issues:
+    types: [opened, labeled, closed]
+  pull_request:
+    types: [opened, closed, labeled, review_requested]
+
+jobs:
+  project-automation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add new issues to project
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/users/${{ github.repository_owner }}/projects/1
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: Add new PRs to project
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/users/${{ github.repository_owner }}/projects/1
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: Move issue to "In Progress" when assigned
+        if: github.event_name == 'issues' && github.event.action == 'assigned'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.payload.issue;
+            await github.rest.projects.updateCard({
+              card_id: issue.id,
+              column_id: 'YOUR_IN_PROGRESS_COLUMN_ID'
+            });
+
+      - name: Move PR to "Review" when ready
+        if: github.event_name == 'pull_request' && github.event.action == 'review_requested'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            await github.rest.projects.updateCard({
+              card_id: pr.id,
+              column_id: 'YOUR_REVIEW_COLUMN_ID'
+            });

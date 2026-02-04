@@ -1,0 +1,17 @@
+# These owners will be the default owners for everything in the repo
+*       @yannick-zahinda
+
+# Source code owners
+/src/                @yannick-zahinda
+
+# Documentation owners
+/docs/               @yannick-zahinda
+README.md            @yannick-zahinda
+
+# Configuration files
+/.github/            @yannick-zahinda
+/docker/             @yannick-zahinda
+/scripts/            @yannick-zahinda
+
+# Test files
+/test/               @yannick-zahinda

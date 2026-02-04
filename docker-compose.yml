@@ -1,0 +1,110 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: employee-management-db
+    hostname: db
+    restart: unless-stopped
+    ports:
+      - "5432:5432" 
+    networks:
+      - employee-network
+    environment:
+      POSTGRES_DB: employee_management
+      POSTGRES_USER: yannick
+      
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yannick -d employee_management"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: employee-management-redis
+    hostname: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"  
+    networks:
+      - employee-network
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-}  # Optional password
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: employee-management-api
+    hostname: api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node.js debug port
+    networks:
+      - employee-network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Non-sensitive environment variables
+      NODE_ENV: development
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: yannick
+      DB_DATABASE: employee_management
+      DB_SSL: "false"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PORT: 3000
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:3001"
+      RATE_LIMIT_TTL: "60"
+      RATE_LIMIT_LIMIT: "100"
+      SWAGGER_ENABLED: "true"
+      FRONTEND_URL: "http://localhost:3000"
+    env_file:
+      - .env.api  
+    volumes:
+      - ./src:/app/src  
+      - ./logs:/app/logs
+      - /app/node_modules  
+    command: npm run start:dev
+
+volumes:
+  postgres_data:
+    driver: local
+    name: employee-management-postgres-data
+  redis_data:
+    driver: local
+    name: employee-management-redis-data
+
+
+networks:
+  employee-network:
+    driver: bridge
+    name: employee-management-network
+
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
