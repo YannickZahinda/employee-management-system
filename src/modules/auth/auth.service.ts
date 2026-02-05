@@ -67,11 +67,9 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      // Don't reveal that user doesn't exist for security
       return;
     }
 
-    // Generate reset token
     const resetToken = await this.jwtService.signAsync(
       { sub: user.id, email: user.email },
       {
@@ -80,11 +78,9 @@ export class AuthService {
       },
     );
 
-    // Hash the reset token
     const salt = await bcrypt.genSalt(10);
     const hashedToken = await bcrypt.hash(resetToken, salt);
 
-    // Save token and expiry
     user.passwordResetToken = hashedToken;
     user.passwordResetExpiresAt = new Date(Date.now() + 3600000);
     
@@ -98,7 +94,6 @@ export class AuthService {
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     try {
-      // Verify token
       const payload = this.jwtService.verify(token, {
         secret: this.configService.get('config.jwtSecret') + 'reset',
       });
@@ -109,14 +104,12 @@ export class AuthService {
         throw new UnauthorizedException('Invalid reset token');
       }
 
-      // Verify token matches stored hash
       const isValid = await bcrypt.compare(token, user.passwordResetToken);
 
       if (!isValid || !user.passwordResetExpiresAt || user.passwordResetExpiresAt < new Date()) {
         throw new UnauthorizedException('Reset token expired');
       }
 
-      // Update password
       user.password = newPassword;
       user.passwordResetToken? user.passwordResetToken : undefined;
       user.passwordResetExpiresAt? user.passwordResetExpiresAt : undefined;
