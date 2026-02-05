@@ -3,8 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { Attendance } from 'src/modules/attendance/entities/attendance.entity';
+import { Attendance } from '../../attendance/entities/attendance.entity';
 import { User } from 'src/modules/users/entity/user.entity';
+import { EmailTemplatesService} from './email-templates.service';
 
 export interface EmailOptions {
   to: string;
@@ -20,6 +21,7 @@ export class EmailService {
 
   constructor(
     private configService: ConfigService,
+    private emailTemplatesService: EmailTemplatesService,
     @InjectQueue('email') private emailQueue: Queue,
   ) {
     this.initializeTransporter();
@@ -52,53 +54,46 @@ export class EmailService {
       };
 
       await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Email sent to ${options.to}`);
+      this.logger.log(`📧 Email sent to ${options.to}`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send email to ${options.to}:`, error);
+      this.logger.error(`❌ Failed to send email to ${options.to}:`, error);
       return false;
     }
   }
 
-  async queueAttendanceEmail(attendance: Attendance, user: User): Promise<void> {
-    const subject = `Attendance Recorded - ${attendance.date.toDateString()}`;
-    
-    const html = `
-      <h2>Attendance Recorded</h2>
-      <p>Hello ${user.firstName},</p>
-      <p>Your attendance has been recorded for ${attendance.date.toDateString()}.</p>
-      <ul>
-        <li><strong>Clock In:</strong> ${attendance.clockIn || 'Not recorded'}</li>
-        <li><strong>Clock Out:</strong> ${attendance.clockOut || 'Not recorded'}</li>
-        <li><strong>Status:</strong> ${attendance.status}</li>
-        <li><strong>Working Hours:</strong> ${attendance.workingHours} hours</li>
-      </ul>
-      <p>Thank you!</p>
-    `;
-
-    await this.emailQueue.add('attendance-notification', {
-      to: user.email,
-      subject,
-      html,
-    });
+  // Queue email using templates
+  async queueWelcomeEmail(user: User, plainPassword?: string): Promise<void> {
+    const template = this.emailTemplatesService.generateWelcomeEmail(user, plainPassword);
+    await this.emailQueue.add('welcome', template);
+    this.logger.log(`📧 Welcome email queued for ${user.email}`);
   }
 
   async queuePasswordResetEmail(user: User, resetToken: string): Promise<void> {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
-    const html = `
-      <h2>Password Reset Request</h2>
-      <p>Hello ${user.firstName},</p>
-      <p>You requested to reset your password. Click the link below to reset it:</p>
-      <p><a href="${resetUrl}">Reset Password</a></p>
-      <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request this, please ignore this email.</p>
-    `;
+    const template = this.emailTemplatesService.generatePasswordResetEmail(user, resetToken);
+    await this.emailQueue.add('password-reset', template);
+    this.logger.log(`📧 Password reset email queued for ${user.email}`);
+  }
 
-    await this.emailQueue.add('password-reset', {
-      to: user.email,
-      subject: 'Password Reset Request',
-      html,
-    });
+  async queueAttendanceEmail(attendance: Attendance, user: User): Promise<void> {
+    const template = this.emailTemplatesService.generateAttendanceNotificationEmail(user, attendance);
+    await this.emailQueue.add('attendance-notification', template);
+    this.logger.log(`📧 Attendance email queued for ${user.email}`);
+  }
+
+  // Direct send (bypass queue for testing)
+  async sendDirectEmail(options: EmailOptions): Promise<boolean> {
+    return this.sendEmail(options);
+  }
+
+  async testConnection(): Promise<boolean> {
+    try {
+      await this.transporter.verify();
+      this.logger.log('✅ Email transporter connection verified');
+      return true;
+    } catch (error) {
+      this.logger.error('❌ Email transporter connection failed:', error);
+      return false;
+    }
   }
 }

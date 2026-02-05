@@ -3,7 +3,7 @@ import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EmailProcessor } from './processors/email.processor';
 import { EmailService } from './services/email.service';
-import { TestEmailController } from './test-email.controller';
+import { EmailTemplatesService } from './services/email-templates.service';
 
 @Module({
   imports: [
@@ -30,8 +30,7 @@ import { TestEmailController } from './test-email.controller';
       name: 'email',
     }),
   ],
-  controllers: [TestEmailController],
-  providers: [EmailProcessor, EmailService],
-  exports: [BullModule, EmailService],
+  providers: [EmailProcessor, EmailService, EmailTemplatesService],
+  exports: [BullModule, EmailService, EmailTemplatesService],
 })
 export class QueueModule {}

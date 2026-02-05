@@ -1,22 +1,19 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
-  BadRequestException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, ILike } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+import { Repository, ILike } from 'typeorm';
 import { User, UserRole } from '../users/entity/user.entity';
-import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PaginatedResponse } from '../../common/interfaces/paginated-response.interface';
 import { WinstonLogger } from '../../shared/logger/winston.logger';
 import { Attendance } from '../attendance/entities/attendance.entity';
 import { CreateUserDto } from '../users/dtos/create-user.dto';
 import { UpdateUserDto } from '../users/dtos/update-user.dto';
+import { EmailService } from '../queue/services/email.service';
 
 @Injectable()
 export class EmployeeService {
@@ -26,9 +23,10 @@ export class EmployeeService {
     @InjectRepository(Attendance)
     private attendanceRepository: Repository<Attendance>,
     private logger: WinstonLogger,
+    private emailService: EmailService,
   ) {}
 
-  async createEmployee(
+   async createEmployee(
     createUserDto: CreateUserDto,
     createdByAdminId?: string,
   ): Promise<User> {
@@ -55,8 +53,15 @@ export class EmployeeService {
       EmployeeService.name,
     );
 
-    const { password: _, refreshToken: __, ...result } = employee_user;
-    return result as User;
+    // Queue welcome email with password
+    await this.emailService.queueWelcomeEmail(employee_user, password);
+
+    return this.getSafeUser(employee_user);
+  }
+
+  private getSafeUser(user: User): User {
+    const { password, refreshToken, passwordResetToken, ...safeUser } = user;
+    return safeUser as User;
   }
 
   async findAllEmployees(
@@ -217,7 +222,7 @@ export class EmployeeService {
 
   // async getEmployeeAttendanceSummary(employeeId: string) {
   //   const employee = await this.findEmployeeById(employeeId);
-    
+
   //   // You would join with attendance records here
   //   // For now, return basic info
   //   return {

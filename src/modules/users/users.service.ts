@@ -43,8 +43,9 @@ export class UsersService {
     
     this.logger.log(`User created: ${email}`, UsersService.name);
     
-    const { password: _, refreshToken: __, ...result } = user;
-    return result as User;
+    // const { password: _, refreshToken: __, ...result } = user;
+    // return result as User;
+    return user;
   }
 
   async findAll(paginationDto: PaginationDto): Promise<PaginatedResponse<User>> {
