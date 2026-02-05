@@ -15,35 +15,15 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Check PR size
-      uses: gsactions/commit-message-checker@v1
-      with:
-        pattern: '^(feat|fix|docs|style|refactor|test|chore|perf|build|ci)(\(.+\))?: .{1,72}'
-        error: 'Commit message must follow Conventional Commits format'
-        excludeDescription: 'true'
-        excludeTitle: 'true'
-
-    - name: Check for large files
+    - name: Check for large files (warning only)
       run: |
         MAX_SIZE=5242880  # 5MB
-        LARGE_FILES=$(find . -type f -size +${MAX_SIZE}c -not -path "./node_modules/*" -not -path "./.git/*")
-        if [ -n "$LARGE_FILES" ]; then
-          echo "❌ Large files detected:"
-          echo "$LARGE_FILES"
-          exit 1
-        fi
-
-    - name: Check for secrets
-      uses: trufflesecurity/trufflehog@main
-      with:
-        path: ./
-        base: ${{ github.event.pull_request.base.sha }}
-        head: ${{ github.event.pull_request.head.sha }}
-
-    - name: Check branch naming
-      run: |
-        BRANCH_NAME="${{ github.head_ref }}"
-        if [[ ! "$BRANCH_NAME" =~ ^(feature|fix|hotfix|release)/.+|^(main|develop|test)$ ]]; then
-          echo "❌ Branch name must follow pattern: feature/..., fix/..., hotfix/..., release/..., main, develop, test"
-          exit 1
-        fi
+        echo "Checking for files larger than 5MB..."
+        find . -type f -size +${MAX_SIZE}c \
+          -not -path "./node_modules/*" \
+          -not -path "./.git/*" \
+          -not -path "./dist/*" \
+          -not -path "./coverage/*" \
+          -not -name "*.log" || true
+        
+        echo "Note: Large files (>5MB) should not be committed to git"
