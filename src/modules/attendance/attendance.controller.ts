@@ -23,9 +23,9 @@ import { ClockOutDto } from './dto/clock-out.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guards';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/role.decorators';
-import { UserRole } from '../users/entity/user.schema';
+import { UserRole } from '../users/entity/user.entity';
 import { CurrentUser } from '../../common/decorators/api.decorators';
-import { User } from '../users/entity/user.schema';
+import { User } from '../users/entity/user.entity';
 
 @ApiTags('Attendance')
 @ApiBearerAuth()

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { Attendance, AttendanceStatus } from './entities/attendance.entity';
-import { User } from '../users/entity/user.schema';
+import { User } from '../users/entity/user.entity';
 import { ClockInDto } from './dto/clock-in.dto';
 import { ClockOutDto } from './dto/clock-out.dto';
 import { EmailService } from '../queue/services/email.service';

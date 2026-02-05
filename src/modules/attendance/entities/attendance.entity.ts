@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../users/entity/user.schema';
+import { User } from '../../users/entity/user.entity';
 
 export enum AttendanceStatus {
   PRESENT = 'present',

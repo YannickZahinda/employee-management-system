@@ -4,7 +4,7 @@ import * as nodemailer from 'nodemailer';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Attendance } from 'src/modules/attendance/entities/attendance.entity';
-import { User } from 'src/modules/users/entity/user.schema';
+import { User } from 'src/modules/users/entity/user.entity';
 
 export interface EmailOptions {
   to: string;

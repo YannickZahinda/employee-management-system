@@ -6,7 +6,7 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { TokenPayload } from './interfaces/token-payload.interface';
 import { WinstonLogger } from '../../shared/logger/winston.logger';
-import { User, UserRole } from '../users/entity/user.schema';
+import { User, UserRole } from '../users/entity/user.entity';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
