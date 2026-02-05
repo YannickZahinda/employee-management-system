@@ -52,7 +52,7 @@ export class EmployeeController {
     // Managers can only create employees, not other managers/admins
     if (
       currentUser.role === UserRole.MANAGER &&
-      createUserDto.roles !== UserRole.EMPLOYEE
+      createUserDto.role !== UserRole.EMPLOYEE
     ) {
       throw new ForbiddenException('Managers can only create employees');
     }

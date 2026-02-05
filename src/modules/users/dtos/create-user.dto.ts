@@ -56,7 +56,7 @@ export class CreateUserDto {
     required: false,
   })
   @IsOptional()
-  @IsPhoneNumber()
+  @IsString()
   phoneNumber?: string;
 
   @ApiProperty({
@@ -64,18 +64,16 @@ export class CreateUserDto {
     description: 'Employee identifier (auto-generated if not provided)',
     required: false,
   })
-  @IsOptional()
-  @IsString()
-  employeeIdentifier?: string;
+  // @IsOptional()
+  // @IsString()
+  // employeeIdentifier?: string;
 
   @ApiProperty({
     enum: UserRole,
-    isArray: true,
-    default: [UserRole.EMPLOYEE],
+    default: UserRole.EMPLOYEE,
     required: false,
   })
   @IsOptional()
-  @IsArray()
-  @IsEnum(UserRole, { each: true })
-  roles?: UserRole = UserRole.EMPLOYEE;
+  @IsEnum(UserRole)
+  role?: UserRole = UserRole.EMPLOYEE;
 }
