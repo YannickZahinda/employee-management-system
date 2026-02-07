@@ -40,7 +40,7 @@ export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new employee (Admin/Manager only)' })
   @ApiResponse({ status: 201, description: 'Employee created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -49,6 +49,7 @@ export class EmployeeController {
     @Body() createUserDto: CreateUserDto,
     @CurrentUser() currentUser: User,
   ) {
+    
     // Managers can only create employees, not other managers/admins
     if (
       currentUser.role === UserRole.MANAGER &&

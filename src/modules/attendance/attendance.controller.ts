@@ -35,19 +35,18 @@ export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post('clock-in')
+  @Roles(UserRole.EMPLOYEE)
   @ApiOperation({ summary: 'Clock in for the day' })
   @ApiResponse({ status: 201, description: 'Clocked in successfully' })
   @ApiResponse({ status: 400, description: 'Invalid time format' })
   @ApiResponse({ status: 404, description: 'Employee not found' })
-  async clockIn(
-    @CurrentUser() user: User,
-    @Body() clockInDto: ClockInDto,
-  ) {
-    // Check if user is an employee (not admin)
-    if (user.role === UserRole.ADMIN) {
-      throw new BadRequestException('Admins cannot clock in');
-    }
-
+  async clockIn(@CurrentUser() user: User, @Body() clockInDto: ClockInDto) {
+    console.log('🔍 DEBUG - Current user in clockIn:', {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      sub: (user as any).sub,
+    });
     return await this.attendanceService.clockIn(user.id, clockInDto);
   }
 
@@ -55,11 +54,11 @@ export class AttendanceController {
   @ApiOperation({ summary: 'Clock out for the day' })
   @ApiResponse({ status: 200, description: 'Clocked out successfully' })
   @ApiResponse({ status: 400, description: 'Invalid time format' })
-  @ApiResponse({ status: 404, description: 'Employee not found or no clock-in recorded' })
-  async clockOut(
-    @CurrentUser() user: User,
-    @Body() clockOutDto: ClockOutDto,
-  ) {
+  @ApiResponse({
+    status: 404,
+    description: 'Employee not found or no clock-in recorded',
+  })
+  async clockOut(@CurrentUser() user: User, @Body() clockOutDto: ClockOutDto) {
     if (user.role === UserRole.ADMIN) {
       throw new BadRequestException('Admins cannot clock out');
     }
@@ -68,8 +67,11 @@ export class AttendanceController {
   }
 
   @Get('today')
-  @ApiOperation({ summary: 'Get today\'s attendance for current user' })
-  @ApiResponse({ status: 200, description: 'Attendance retrieved successfully' })
+  @ApiOperation({ summary: "Get today's attendance for current user" })
+  @ApiResponse({
+    status: 200,
+    description: 'Attendance retrieved successfully',
+  })
   async getTodayAttendance(@CurrentUser() user: User) {
     return await this.attendanceService.getAttendance(user.id, new Date());
   }
@@ -88,13 +90,19 @@ export class AttendanceController {
   ) {
     const fromDate = from ? new Date(from) : undefined;
     const toDate = to ? new Date(to) : undefined;
-    
-    return await this.attendanceService.getEmployeeAttendance(employeeId, fromDate, toDate);
+
+    return await this.attendanceService.getEmployeeAttendance(
+      employeeId,
+      fromDate,
+      toDate,
+    );
   }
 
   @Get('all')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  @ApiOperation({ summary: 'Get all attendance records (admins/managers only)' })
+  @ApiOperation({
+    summary: 'Get all attendance records (admins/managers only)',
+  })
   @ApiQuery({ name: 'from', required: false, type: Date })
   @ApiQuery({ name: 'to', required: false, type: Date })
   @ApiResponse({ status: 200, description: 'All attendance records retrieved' })
@@ -104,7 +112,7 @@ export class AttendanceController {
   ) {
     const fromDate = from ? new Date(from) : undefined;
     const toDate = to ? new Date(to) : undefined;
-    
+
     return await this.attendanceService.getAllAttendances(fromDate, toDate);
   }
 

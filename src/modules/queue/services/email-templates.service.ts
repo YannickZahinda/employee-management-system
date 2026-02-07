@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DateHelper } from 'src/common/utils/date.helper';
 import {
   Attendance,
   AttendanceStatus,
@@ -77,7 +78,8 @@ export class EmailTemplatesService {
     user: User,
     attendance: any,
   ): EmailTemplateData {
-    const subject = `Attendance Recorded - ${attendance.date.toDateString()}`;
+    const dateString = DateHelper.toDateString(attendance.date);
+    const subject = `Attendance Recorded - ${dateString}`;
     const html = this.getAttendanceNotificationTemplate(user, attendance);
 
     return {

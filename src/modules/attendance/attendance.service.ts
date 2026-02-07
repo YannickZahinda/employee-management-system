@@ -29,7 +29,6 @@ export class AttendanceService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Check if attendance already exists for today
     let attendance = await this.attendanceRepository.findOne({
       where: {
         employeeId,
@@ -44,7 +43,6 @@ export class AttendanceService {
       attendance.clockIn = clockInDto.time;
       attendance.status = status;
     } else {
-      // Create new attendance - fix: create object without using .create() method
       attendance = this.attendanceRepository.create({
         date: today,
         clockIn: clockInDto.time,

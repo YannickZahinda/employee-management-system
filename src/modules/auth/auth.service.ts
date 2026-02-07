@@ -151,7 +151,7 @@ export class AuthService {
     const payload: TokenPayload = {
       sub: user.id,
       email: user.email,
-      roles: [user.role],
+      role: user.role
     };
 
     const [accessToken, refreshToken] = await Promise.all([

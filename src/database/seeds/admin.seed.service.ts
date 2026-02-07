@@ -14,7 +14,7 @@ export class AdminSeedService {
   ) {}
 
   async seed() {
-    const adminEmail = 'admin@academicbridge.com';
+    const adminEmail = 'zahinday@gmail.com';
     
     const existingAdmin = await this.userRepository.findOne({
       where: { email: adminEmail },
@@ -28,11 +28,11 @@ export class AdminSeedService {
     const admin = this.userRepository.create({
       email: adminEmail,
       firstName: 'Admin',
-      lastName: 'User AcademicBridge',
+      lastName: 'Zahinda Mulikuza',
       password: 'Admin123!',
       role: UserRole.ADMIN,
-      phoneNumber: '+1234567890',
-      employeeIdentifier: 'ADMIN001',
+      phoneNumber: '+250783020147',
+      employeeIdentifier: 'ADMIN002',
       isActive: true,
       isEmailVerified: true,
       emailVerifiedAt: new Date(),
