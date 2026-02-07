@@ -31,7 +31,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guards';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Public } from '../../common/decorators/role.decorators';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { User } from './entity/user.schema';
+import { User } from './entity/user.entity';
 
 @ApiController('users', 'Users')
 @Controller('users')

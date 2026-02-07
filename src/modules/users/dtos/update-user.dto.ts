@@ -1,7 +1,8 @@
 import { PartialType, OmitType } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
-import { IsOptional, IsBoolean, IsString, MinLength } from 'class-validator';
+import { IsOptional, IsBoolean, IsString, MinLength, IsEnum } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { UserRole } from '../entity/user.entity';
 
 export class UpdateUserDto extends PartialType(
   OmitType(CreateUserDto, ['password'] as const),
@@ -23,4 +24,7 @@ export class UpdateUserDto extends PartialType(
 
   refreshToken?: string;
   refreshTokenExpiresAt?: Date;
+
+  @IsEnum(UserRole)
+  role?: UserRole;
 }

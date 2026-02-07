@@ -29,9 +29,13 @@ export class WinstonLogger implements OnModuleInit {
         format: winston.format.combine(
           winston.format.timestamp(),
           winston.format.colorize(),
-          winston.format.printf(({ timestamp, level, message, context, trace }) => {
-            return `${timestamp} [${context || 'Application'}] ${level}: ${message}${trace ? `\n${trace}` : ''}`;
-          }),
+          winston.format.printf(
+            ({ timestamp, level, message, context, trace, correlationId }) => {
+              const corrId = correlationId ? `[${correlationId}]` : '';
+              const ctx = context ? `[${context}]` : '';
+              return `${timestamp} ${corrId} ${ctx} ${level}: ${message}${trace ? `\n${trace}` : ''}`;
+            },
+          ),
         ),
       }),
       new DailyRotateFile({
@@ -56,33 +60,56 @@ export class WinstonLogger implements OnModuleInit {
         [LogLevel.DEBUG]: 3,
         [LogLevel.VERBOSE]: 4,
       },
+      defaultMeta: { service: 'employee-management' },
       transports,
       exceptionHandlers: [
-        new winston.transports.File({ filename: 'logs/exceptions.log' }),
+        new winston.transports.File({
+          filename: 'logs/exceptions.log',
+          format: winston.format.json(),
+        }),
       ],
       rejectionHandlers: [
-        new winston.transports.File({ filename: 'logs/rejections.log' }),
+        new winston.transports.File({
+          filename: 'logs/rejections.log',
+          format: winston.format.json(),
+        }),
       ],
     });
   }
 
-  log(message: string, context?: string) {
-    this.logger.info(message, { context });
+  log(message: string, context?: string, correlationId?: string) {
+    this.logger.info(message, { context, correlationId });
   }
 
-  error(message: string, trace?: string, context?: string) {
-    this.logger.error(message, { context, trace });
+  error(
+    message: string,
+    trace?: string,
+    context?: string,
+    correlationId?: string,
+  ) {
+    this.logger.error(message, { context, trace, correlationId });
   }
 
-  warn(message: string, context?: string) {
-    this.logger.warn(message, { context });
+  warn(message: string, context?: string, correlationId?: string) {
+    this.logger.warn(message, { context, correlationId });
   }
 
-  debug(message: string, context?: string) {
-    this.logger.debug(message, { context });
+  debug(message: string, context?: string, correlationId?: string) {
+    this.logger.debug(message, { context, correlationId });
   }
 
-  verbose(message: string, context?: string) {
-    this.logger.verbose(message, { context });
+  verbose(message: string, context?: string, correlationId?: string) {
+    this.logger.verbose(message, { context, correlationId });
+  }
+
+  // Structured logging for analytics/monitoring
+  auditLog(action: string, userId: string, details: any, context?: string) {
+    this.logger.info('AUDIT_LOG', {
+      context,
+      action,
+      userId,
+      details,
+      timestamp: new Date().toISOString(),
+    });
   }
 }

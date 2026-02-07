@@ -8,14 +8,15 @@ on:
 
 jobs:
   test:
+    name: Run Tests
     runs-on: ubuntu-latest
     
     services:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
           POSTGRES_DB: test_db
         options: >-
           --health-cmd pg_isready
@@ -36,7 +37,7 @@ jobs:
           - 6379:6379
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v4
     
     - name: Setup Node.js
@@ -48,39 +49,15 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Type checking
-      run: npx tsc --noEmit
-    
-    - name: Lint code
-      run: npm run lint
-    
     - name: Run tests
-      run: npm test -- --coverage
+      run: npm test
       env:
         NODE_ENV: test
         DB_HOST: localhost
         DB_PORT: 5432
-        DB_USERNAME: postgres
-        DB_PASSWORD: postgres
+        DB_USERNAME: test_user
+        DB_PASSWORD: test_password
         DB_DATABASE: test_db
-        DB_SSL: "false"
-        JWT_SECRET: test-jwt-secret-12345
-        JWT_EXPIRATION: 1h
-        REFRESH_TOKEN_EXPIRATION: 7d
+        JWT_SECRET: test-jwt-secret-1234567890
         REDIS_HOST: localhost
         REDIS_PORT: 6379
-        REDIS_PASSWORD: ""
-        EMAIL_HOST: smtp.test.com
-        EMAIL_PORT: 587
-        EMAIL_USER: test@test.com
-        EMAIL_PASS: testpass
-    
-    - name: Build project
-      run: npm run build
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella

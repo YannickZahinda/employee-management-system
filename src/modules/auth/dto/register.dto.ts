@@ -6,10 +6,8 @@ import {
   MaxLength,
   IsNotEmpty,
   IsOptional,
-  IsEnum,
-  IsPhoneNumber,
+  Matches,
 } from 'class-validator';
-import { UserRole } from 'src/common/decorators/api.decorators';
 
 export class RegisterDto {
   @ApiProperty({
@@ -42,37 +40,27 @@ export class RegisterDto {
 
   @ApiProperty({
     example: 'Password123!',
-    description: 'User password (min 8 characters)',
+    description:
+      'User password (min 8 chars, at least 1 uppercase, 1 lowercase, 1 number)',
   })
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
+    message:
+      'Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number',
+  })
   password: string;
 
   @ApiProperty({
     example: '+1234567890',
-    description: 'Phone number',
-    required: false,
-  })
-  @IsOptional()
-  @IsPhoneNumber()
-  phoneNumber?: string;
-
-  @ApiProperty({
-    enum: UserRole,
-    default: UserRole.EMPLOYEE,
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole = UserRole.EMPLOYEE;
-
-  @ApiProperty({
-    example: 'EMP001',
-    description: 'Employee identifier (auto-generated if not provided)',
+    description: 'User phone number (optional)',
     required: false,
   })
   @IsOptional()
   @IsString()
-  employeeIdentifier?: string;
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Please enter a valid phone number',
+  })
+  phoneNumber?: string;
 }

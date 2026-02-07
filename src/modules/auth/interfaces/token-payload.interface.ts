@@ -3,7 +3,7 @@ import { UserRole } from '../../../common/decorators/api.decorators';
 export interface TokenPayload {
   sub: string; // user ID
   email: string;
-  roles: UserRole[];
+  role: UserRole;
   iat?: number;
   exp?: number;
 }

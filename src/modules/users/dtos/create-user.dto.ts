@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsEnum,
   IsArray,
+  IsPhoneNumber,
 } from 'class-validator';
 import { UserRole } from '../../../common/decorators/api.decorators';
 
@@ -50,13 +51,29 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    enum: UserRole,
-    isArray: true,
-    default: [UserRole.EMPLOYEE],
+    example: '+1234567890',
+    description: 'User phone number',
     required: false,
   })
   @IsOptional()
-  @IsArray()
-  @IsEnum(UserRole, { each: true })
-  roles?: UserRole[];
+  @IsString()
+  phoneNumber?: string;
+
+  @ApiProperty({
+    example: 'EMP001',
+    description: 'Employee identifier (auto-generated if not provided)',
+    required: false,
+  })
+  // @IsOptional()
+  // @IsString()
+  // employeeIdentifier?: string;
+
+  @ApiProperty({
+    enum: UserRole,
+    default: UserRole.EMPLOYEE,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(UserRole)
+  role?: UserRole = UserRole.EMPLOYEE;
 }

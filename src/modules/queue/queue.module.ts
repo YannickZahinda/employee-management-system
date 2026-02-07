@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EmailProcessor } from './processors/email.processor';
 import { EmailService } from './services/email.service';
+import { EmailTemplatesService } from './services/email-templates.service';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { EmailService } from './services/email.service';
       name: 'email',
     }),
   ],
-  providers: [EmailProcessor, EmailService],
-  exports: [BullModule, EmailService],
+  providers: [EmailProcessor, EmailService, EmailTemplatesService],
+  exports: [BullModule, EmailService, EmailTemplatesService],
 })
 export class QueueModule {}
