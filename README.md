@@ -259,7 +259,7 @@ docker compose exec db psql -U yannick -d employee_management
 
 ## 🚢 Deployment
 
-### Docker Deployment
+### Docker Deployment (Coming soon)
 
 ```bash
 # Build production image
@@ -431,7 +431,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email yannickzahinda@gmail.com or open an issue in the GitHub repository.
+For support, email ymulikuza@gmail.com or open an issue in the GitHub repository.
 
 ---
 
