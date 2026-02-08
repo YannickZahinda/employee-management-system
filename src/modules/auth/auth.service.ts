@@ -86,7 +86,6 @@ export class AuthService {
     
     await this.usersService.saveUser(user);
 
-    // Queue password reset email
     await this.emailService.queuePasswordResetEmail(user, resetToken);
 
     this.logger.log(`Password reset token generated for: ${email}`, AuthService.name);

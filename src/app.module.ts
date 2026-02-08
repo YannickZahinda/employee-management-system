@@ -9,19 +9,16 @@ import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 
-// Core modules
 import { CustomConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { LoggerModule } from './shared/logger/logger.module';
 import { QueueModule } from './modules/queue/queue.module';
 
-// Guards & Interceptors
 import { JwtAuthGuard } from './common/guards/jwt-auth.guards';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
-// Feature modules
 import { AuthModule } from './modules/auth/auth.module';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
@@ -64,7 +61,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
     AttendanceModule,
     ReportModule,
     HealthModule,
-    SeedModule,
+    SeedModule
   ],
   providers: [
     {
