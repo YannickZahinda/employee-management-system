@@ -70,20 +70,20 @@ export class User {
   emailVerifiedAt: Date;
 
   @Exclude()
-  @Column({ nullable: true })
-  refreshToken: string | null;
+  @Column({ type: 'varchar', nullable: true })
+  refreshToken: string;
 
   @Exclude()
-  @Column({ nullable: true })
-  refreshTokenExpiresAt: Date | null;
+  @Column({ type: 'timestamp', nullable: true })
+  refreshTokenExpiresAt: Date;
 
   @Exclude()
-  @Column({ nullable: true })
-  passwordResetToken: string | null;
-  @Exclude()
-  @Column({ nullable: true })
-  passwordResetExpiresAt: Date | null;
+  @Column({ type: 'varchar', nullable: true })
+  passwordResetToken: string;
 
+  @Exclude()
+  @Column({ type: 'timestamp', nullable: true })
+  passwordResetExpiresAt: Date;
   @ApiProperty()
   @Column({ nullable: true })
   lastLoginAt: Date;

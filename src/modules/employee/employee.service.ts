@@ -221,10 +221,8 @@ export class EmployeeService {
   }
 
   // async getEmployeeAttendanceSummary(employeeId: string) {
-  //   const employee = await this.findEmployeeById(employeeId);
+  //   const employee = await this.findOneEmployeeById(employeeId);
 
-  //   // You would join with attendance records here
-  //   // For now, return basic info
   //   return {
   //     employee,
   //     attendanceSummary: {

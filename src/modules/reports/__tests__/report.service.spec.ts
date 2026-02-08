@@ -17,7 +17,6 @@ describe('ReportService', () => {
   let userRepo: Repository<User>;
   let logger: WinstonLogger;
 
-  // Mock data
   const mockUser: Partial<User> = {
     id: 'user-123',
     email: 'test@company.com',
@@ -30,10 +29,10 @@ describe('ReportService', () => {
     isActive: true,
     isEmailVerified: true,
     emailVerifiedAt: new Date(),
-    refreshToken: null,
-    refreshTokenExpiresAt: null, 
-    passwordResetToken: null,
-    passwordResetExpiresAt: null,
+    refreshToken: null as any,
+    refreshTokenExpiresAt: null as any, 
+    passwordResetToken: null as any,
+    passwordResetExpiresAt: null as any,
     lastLoginAt: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
