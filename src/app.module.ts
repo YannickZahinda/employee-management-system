@@ -9,62 +9,59 @@ import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 
-// Core modules
 import { CustomConfigModule } from './config/config.module';
-import { DatabaseModule } from './shared/database/database.module';
+import { DatabaseModule } from './database/database.module';
 import { LoggerModule } from './shared/logger/logger.module';
 import { QueueModule } from './modules/queue/queue.module';
 
-// Guards & Interceptors
 import { JwtAuthGuard } from './common/guards/jwt-auth.guards';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
-// Feature modules
 import { AuthModule } from './modules/auth/auth.module';
 import { EmployeeModule } from './modules/employee/employee.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { ReportModule } from './modules/reports/report.module';
 import { HealthModule } from './modules/health/health.module';
+import { SeedModule } from './database/seeds/seed.module';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 @Module({
   imports: [
-    // Core modules
     CustomConfigModule,
     DatabaseModule,
     LoggerModule,
     QueueModule,
-    
-    // Rate limiting 
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const ttl = configService.get<number>('config.rateLimit.ttl') || 60;
-        const limit = configService.get<number>('config.rateLimit.limit') || 100;
-        
+        const limit =
+          configService.get<number>('config.rateLimit.limit') || 100;
+
         return {
-          throttlers: [{
-            ttl,
-            limit,
-          }],
+          throttlers: [
+            {
+              ttl,
+              limit,
+            },
+          ],
         };
       },
     }),
-    
-    // Scheduling
+
     ScheduleModule.forRoot(),
-    
-    // Event emitter
+
     EventEmitterModule.forRoot(),
-    
-    // Feature modules
+
     AuthModule,
     EmployeeModule,
     AttendanceModule,
     ReportModule,
     HealthModule,
+    SeedModule
   ],
   providers: [
     {
@@ -93,6 +90,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(
+        CorrelationIdMiddleware,
         helmet(),
         compression(),
         cookieParser(),

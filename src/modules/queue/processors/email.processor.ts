@@ -9,20 +9,50 @@ export class EmailProcessor {
 
   constructor(private emailService: EmailService) {}
 
-  @Process('attendance-notification')
-  async handleAttendanceNotification(job: Job) {
-    const { to, subject, html } = job.data;
-    
-    this.logger.log(`Processing attendance email for ${to}`);
-    
+  @Process('welcome')
+  async handleWelcomeEmail(job: Job) {
+    const { to, subject, html, metadata } = job.data;
+
+    this.logger.log(
+      `Processing ${metadata?.type || 'welcome'} email for ${to}`,
+      EmailProcessor.name,
+    );
+
     const success = await this.emailService.sendEmail({
       to,
       subject,
       html,
     });
-    
+
     if (success) {
-      this.logger.log(`Attendance email sent to ${to}`);
+      this.logger.log(
+        `${metadata?.type || 'Welcome'} email sent to ${to}`,
+        EmailProcessor.name,
+      );
+    } else {
+      throw new Error(
+        `Failed to send ${metadata?.type || 'welcome'} email to ${to}`,
+      );
+    }
+  }
+
+  @Process('attendance-notification')
+  async handleAttendanceNotification(job: Job) {
+    const { to, subject, html } = job.data;
+
+    this.logger.log(
+      `Processing attendance email for ${to}`,
+      EmailProcessor.name,
+    );
+
+    const success = await this.emailService.sendEmail({
+      to,
+      subject,
+      html,
+    });
+
+    if (success) {
+      this.logger.log(`Attendance email sent to ${to}`, EmailProcessor.name);
     } else {
       throw new Error(`Failed to send attendance email to ${to}`);
     }
@@ -31,38 +61,25 @@ export class EmailProcessor {
   @Process('password-reset')
   async handlePasswordReset(job: Job) {
     const { to, subject, html } = job.data;
-    
-    this.logger.log(`Processing password reset email for ${to}`);
-    
+
+    this.logger.log(
+      `Processing password reset email for ${to}`,
+      EmailProcessor.name,
+    );
+
     const success = await this.emailService.sendEmail({
       to,
       subject,
       html,
     });
-    
+
     if (success) {
-      this.logger.log(`Password reset email sent to ${to}`);
+      this.logger.log(
+        `Password reset email sent to ${to}`,
+        EmailProcessor.name,
+      );
     } else {
       throw new Error(`Failed to send password reset email to ${to}`);
-    }
-  }
-
-  @Process('welcome')
-  async handleWelcomeEmail(job: Job) {
-    const { to, subject, html } = job.data;
-    
-    this.logger.log(`Processing welcome email for ${to}`);
-    
-    const success = await this.emailService.sendEmail({
-      to,
-      subject,
-      html,
-    });
-    
-    if (success) {
-      this.logger.log(`Welcome email sent to ${to}`);
-    } else {
-      throw new Error(`Failed to send welcome email to ${to}`);
     }
   }
 }

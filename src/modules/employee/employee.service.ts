@@ -1,19 +1,19 @@
 import {
   Injectable,
   NotFoundException,
+  ForbiddenException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, ILike } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
-import { User, UserRole } from '../users/entity/user.schema';
-import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { Repository, ILike } from 'typeorm';
+import { User, UserRole } from '../users/entity/user.entity';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PaginatedResponse } from '../../common/interfaces/paginated-response.interface';
 import { WinstonLogger } from '../../shared/logger/winston.logger';
 import { Attendance } from '../attendance/entities/attendance.entity';
+import { CreateUserDto } from '../users/dtos/create-user.dto';
+import { UpdateUserDto } from '../users/dtos/update-user.dto';
+import { EmailService } from '../queue/services/email.service';
 
 @Injectable()
 export class EmployeeService {
@@ -23,33 +23,50 @@ export class EmployeeService {
     @InjectRepository(Attendance)
     private attendanceRepository: Repository<Attendance>,
     private logger: WinstonLogger,
+    private emailService: EmailService,
   ) {}
 
-  async create(createEmployeeDto: CreateEmployeeDto): Promise<User> {
-    const { email, password, ...rest } = createEmployeeDto;
+   async createEmployee(
+    createUserDto: CreateUserDto,
+    createdByAdminId?: string,
+  ): Promise<User> {
+    const { email, password, ...rest } = createUserDto;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
     });
-    
+
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException(`User with email ${email} already exists`);
     }
 
-    const user = this.userRepository.create({
+    const employee_user = this.userRepository.create({
       ...rest,
       email,
-      password, 
+      password,
     });
 
-    await this.userRepository.save(user);
-    
-    this.logger.log(`Employee created: ${email}`, EmployeeService.name);
-    
-    return user;
+    await this.userRepository.save(employee_user);
+
+    this.logger.log(
+      `Employee created: ${email} by admin ID: ${createdByAdminId}`,
+      EmployeeService.name,
+    );
+
+    // Queue welcome email with password
+    await this.emailService.queueWelcomeEmail(employee_user, password);
+
+    return this.getSafeUser(employee_user);
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginatedResponse<User>> {
+  private getSafeUser(user: User): User {
+    const { password, refreshToken, passwordResetToken, ...safeUser } = user;
+    return safeUser as User;
+  }
+
+  async findAllEmployees(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<User>> {
     const { page = 1, limit = 10, search } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -90,7 +107,7 @@ export class EmployeeService {
     };
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOneEmployeeById(id: string): Promise<User> {
     const employee = await this.userRepository.findOne({
       where: { id, isActive: true },
       select: [
@@ -115,7 +132,11 @@ export class EmployeeService {
     return employee;
   }
 
-  async update(id: string, updateEmployeeDto: UpdateEmployeeDto): Promise<User> {
+  async updateEmployee(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    currentUser: User,
+  ): Promise<User> {
     const employee = await this.userRepository.findOne({
       where: { id, isActive: true },
     });
@@ -124,28 +145,31 @@ export class EmployeeService {
       throw new NotFoundException(`Employee with ID ${id} not found`);
     }
 
-    // Handle password update if provided
-    if (updateEmployeeDto.newPassword) {
-      const salt = await bcrypt.genSalt(10);
-      employee.password = await bcrypt.hash(updateEmployeeDto.newPassword, salt);
+    if (currentUser.role !== UserRole.ADMIN && currentUser.id !== id) {
+      throw new ForbiddenException(
+        'You do not have permission to update this employee',
+      );
     }
 
-    // Update other fields
-    Object.assign(employee, updateEmployeeDto);
-    
-    // Remove newPassword property as it doesn't exist on User entity
-    delete (employee as any).newPassword;
+    //Admin Can Change Role, others cannot
+    if (currentUser.role !== UserRole.ADMIN && updateUserDto.role) {
+      delete updateUserDto.role;
+    }
+
+    Object.assign(employee, updateUserDto);
 
     const updatedEmployee = await this.userRepository.save(employee);
-    
+
     this.logger.log(`Employee updated: ${id}`, EmployeeService.name);
-    
-    // Return without password
-    const { password, refreshToken, passwordResetToken, ...result } = updatedEmployee;
+
+    // Return without sensitive data
+    const { password, refreshToken, passwordResetToken, ...result } =
+      updatedEmployee;
     return result as User;
   }
 
-  async remove(id: string): Promise<void> {
+  // Soft delete employee (admin only)
+  async deleteEmployee(id: string): Promise<void> {
     const employee = await this.userRepository.findOne({
       where: { id, isActive: true },
     });
@@ -156,7 +180,7 @@ export class EmployeeService {
 
     employee.isActive = false;
     await this.userRepository.save(employee);
-    
+
     this.logger.log(`Employee deactivated: ${id}`, EmployeeService.name);
   }
 
@@ -171,8 +195,8 @@ export class EmployeeService {
     from?: Date,
     to?: Date,
   ): Promise<Attendance[]> {
-    const employee = await this.findOne(employeeId);
-    
+    const employee = await this.findOneEmployeeById(employeeId);
+
     if (!employee) {
       throw new NotFoundException(`Employee with ID ${employeeId} not found`);
     }
@@ -183,7 +207,10 @@ export class EmployeeService {
       .orderBy('attendance.date', 'DESC');
 
     if (from && to) {
-      queryBuilder.andWhere('attendance.date BETWEEN :from AND :to', { from, to });
+      queryBuilder.andWhere('attendance.date BETWEEN :from AND :to', {
+        from,
+        to,
+      });
     } else if (from) {
       queryBuilder.andWhere('attendance.date >= :from', { from });
     } else if (to) {
@@ -192,4 +219,18 @@ export class EmployeeService {
 
     return await queryBuilder.getMany();
   }
+
+  // async getEmployeeAttendanceSummary(employeeId: string) {
+  //   const employee = await this.findOneEmployeeById(employeeId);
+
+  //   return {
+  //     employee,
+  //     attendanceSummary: {
+  //       totalDays: 0,
+  //       presentDays: 0,
+  //       absentDays: 0,
+  //       lateDays: 0,
+  //     },
+  //   };
+  // }
 }

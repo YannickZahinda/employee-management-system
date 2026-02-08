@@ -1,0 +1,17 @@
+name: Add PR to Project
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - name: Add PR to project board
+      uses: actions/add-to-project@v0.5.0
+      with:
+        project-url: https://github.com/users/YannickZahinda/projects/4
+        github-token: ${{ secrets.GITHUB_TOKEN }}

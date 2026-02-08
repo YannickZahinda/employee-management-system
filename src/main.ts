@@ -1,5 +1,9 @@
 import { NestFactory, Reflector } from '@nestjs/core';
-import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import {
+  ValidationPipe,
+  ClassSerializerInterceptor,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -13,11 +17,10 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
-  const logger = app.get(WinstonLogger); // Get from DI container
+  const logger = app.get(WinstonLogger);
 
   app.useLogger(logger);
 
-  // Global pipes
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -26,16 +29,31 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
+      exceptionFactory: (errors) => {
+        const formattedErrors = errors.map((error) => ({
+          field: error.property,
+          errors: Object.values(error.constraints || {}),
+          value: error.value,
+        }));
+
+        console.error(
+          '🔥 VALIDATION ERRORS:',
+          JSON.stringify(formattedErrors, null, 2),
+        );
+
+        return new BadRequestException({
+          message: 'Validation failed',
+          errors: formattedErrors,
+          timestamp: new Date().toISOString(),
+        });
+      },
     }),
   );
 
-  // Global interceptors
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
 
-  // Global filters
   app.useGlobalFilters(new HttpExceptionFilter(logger));
 
-  // CORS configuration
   app.enableCors({
     origin: configService.get('config.corsOrigins'),
     credentials: true,
@@ -51,7 +69,6 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  // Swagger configuration
   if (configService.get('config.swaggerEnabled')) {
     const config = new DocumentBuilder()
       .setTitle('NestJS Azure Boilerplate API')

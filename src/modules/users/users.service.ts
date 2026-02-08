@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { User, UserRole } from './entity/user.schema';
+import { User, UserRole } from './entity/user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
@@ -43,8 +43,9 @@ export class UsersService {
     
     this.logger.log(`User created: ${email}`, UsersService.name);
     
-    const { password: _, refreshToken: __, ...result } = user;
-    return result as User;
+    // const { password: _, refreshToken: __, ...result } = user;
+    // return result as User;
+    return user;
   }
 
   async findAll(paginationDto: PaginationDto): Promise<PaginatedResponse<User>> {

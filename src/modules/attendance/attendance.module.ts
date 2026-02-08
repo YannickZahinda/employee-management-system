@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AttendanceService } from './attendance.service';
 import { AttendanceController } from './attendance.controller';
 import { Attendance } from './entities/attendance.entity';
-import { User } from '../users/entity/user.schema';
+import { User } from '../users/entity/user.entity';
 import { QueueModule } from '../queue/queue.module';
 
 @Module({

@@ -18,11 +18,15 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:ci": "jest --coverage --maxWorkers=2",
     "docker:build": "docker build -t employee-management-system .",
     "docker:run": "docker-compose up",
-    "migration:generate": "npm run typeorm migration:generate -- -d dist/database/data-source.js",
-    "migration:run": "npm run typeorm migration:run -- -d dist/database/data-source.js",
-    "migration:revert": "npm run typeorm migration:revert -- -d dist/database/data-source.js"
+    "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
+    "migration:generate": "npx typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts -n",
+    "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
+    "seed:admin": "ts-node -r tsconfig-paths/register scripts/seed-admin.ts",
+    "db:setup": "npm run build && npx typeorm migration:run -d dist/src/database/data-source.js && npm run seed:admin"
   },
   "dependencies": {
     "@godaddy/terminus": "^4.12.1",
@@ -55,6 +59,7 @@
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
     "jspdf": "^2.5.1",
+    "jspdf-autotable": "^5.0.7",
     "nodemailer": "^7.0.13",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -86,6 +91,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/supertest": "^6.0.2",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -100,22 +106,5 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }
