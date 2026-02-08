@@ -186,7 +186,7 @@ export class AuthService {
 
       const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
 
-      if (!isValid || user.refreshTokenExpiresAt < new Date()) {
+      if (!isValid || !user.refreshTokenExpiresAt || user.refreshTokenExpiresAt < new Date()) {
         throw new UnauthorizedException('Refresh token expired');
       }
 

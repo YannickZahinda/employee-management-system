@@ -71,19 +71,18 @@ export class User {
 
   @Exclude()
   @Column({ nullable: true })
-  refreshToken: string;
+  refreshToken: string | null;
 
   @Exclude()
   @Column({ nullable: true })
-  refreshTokenExpiresAt: Date;
+  refreshTokenExpiresAt: Date | null;
 
   @Exclude()
   @Column({ nullable: true })
-  passwordResetToken: string;
-
+  passwordResetToken: string | null;
   @Exclude()
   @Column({ nullable: true })
-  passwordResetExpiresAt: Date;
+  passwordResetExpiresAt: Date | null;
 
   @ApiProperty()
   @Column({ nullable: true })

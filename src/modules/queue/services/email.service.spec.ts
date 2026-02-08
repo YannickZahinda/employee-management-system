@@ -3,7 +3,7 @@ import { EmailService } from './email.service';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bull';
 import { getQueueToken } from '@nestjs/bull';
-import { EmailTemplatesService } from '../services/email-templates.service'; // Add this import
+import { EmailTemplatesService } from '../services/email-templates.service';
 import { User } from 'src/modules/users/entity/user.entity';
 import { Attendance } from 'src/modules/attendance/entities/attendance.entity';
 
@@ -70,7 +70,7 @@ describe('EmailService', () => {
       providers: [
         EmailService,
         { provide: ConfigService, useValue: mockConfigService },
-        { provide: EmailTemplatesService, useValue: mockEmailTemplatesService }, // Add this
+        { provide: EmailTemplatesService, useValue: mockEmailTemplatesService }, 
         { provide: getQueueToken('email'), useValue: mockEmailQueue },
       ],
     }).compile();
@@ -78,7 +78,7 @@ describe('EmailService', () => {
     service = module.get<EmailService>(EmailService);
     configService = module.get<ConfigService>(ConfigService);
     emailQueue = module.get<Queue>(getQueueToken('email'));
-    emailTemplatesService = module.get<EmailTemplatesService>(EmailTemplatesService); // Get the mock
+    emailTemplatesService = module.get<EmailTemplatesService>(EmailTemplatesService); 
   });
 
   it('should be defined', () => {
@@ -92,7 +92,6 @@ describe('EmailService', () => {
         mockUser as User,
       );
 
-      // Verify emailTemplatesService was called
       expect(mockEmailTemplatesService.generateAttendanceNotificationEmail)
         .toHaveBeenCalledWith(mockUser, mockAttendance);
       

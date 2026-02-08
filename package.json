@@ -27,7 +27,6 @@
     "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "seed:admin": "ts-node -r tsconfig-paths/register scripts/seed-admin.ts",
     "db:setup": "npm run build && npx typeorm migration:run -d dist/src/database/data-source.js && npm run seed:admin"
-
   },
   "dependencies": {
     "@godaddy/terminus": "^4.12.1",
@@ -60,6 +59,7 @@
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
     "jspdf": "^2.5.1",
+    "jspdf-autotable": "^5.0.7",
     "nodemailer": "^7.0.13",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

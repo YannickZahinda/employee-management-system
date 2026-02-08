@@ -11,7 +11,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let usersService: UsersService;
   let jwtService: JwtService;
-  let emailService: EmailService; // Add this
+  let emailService: EmailService; 
 
   const mockUsersService = {
     findByEmail: jest.fn(),
